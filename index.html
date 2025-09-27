@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Creative To‑Do — Single File App</title>
+
+  <!-- Google Fonts (no installation required) -->
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;700;800&family=Playfair+Display:wght@400;700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --accent:#6C5CE7;
+      --accent-2:#00b894;
+      --muted:#F4F6FB;
+      --card:#ffffffcc;
+      --glass: rgba(255,255,255,0.06);
+    }
+    html,body{height:100%;margin:0;font-family: 'Raleway', sans-serif;background: linear-gradient(135deg,#0f2027 0%, #203A43 35%, #2C5364 100%);color:#fff}
+
+    /* Decorative background shapes */
+    .bg-shapes{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .shape{position:absolute;filter:blur(30px);opacity:0.6;mix-blend-mode:overlay}
+    .shape.one{width:520px;height:520px;background:radial-gradient(circle at 20% 20%, #ff9a9e, transparent 40%);left:-120px;top:-80px;transform:rotate(12deg)}
+    .shape.two{width:420px;height:420px;background:conic-gradient(#6C5CE7, #8360c3 50%, transparent);right:-80px;bottom:-140px}
+    .shape.three{width:260px;height:260px;background:linear-gradient(45deg,#00b894,#00cec9);left:20%;top:60%}
+
+    /* App container */
+    .container{position:relative;z-index:1;max-width:980px;margin:40px auto;padding:28px;border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));box-shadow:0 8px 40px rgba(2,6,23,0.6);backdrop-filter: blur(6px)}
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo .dot{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#00b894);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Playfair Display',serif}
+    h1{margin:0;font-family:'Playfair Display',serif;font-size:24px}
+    .subtitle{font-size:12px;opacity:0.9}
+
+    /* Motivational quote */
+    .quote{margin-top:18px;padding:14px;border-radius:12px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));display:flex;align-items:center;gap:12px}
+    .quote-text{font-family:'Montserrat',sans-serif;font-weight:600;font-size:18px;color:#ffeaa7}
+
+    /* Controls & login */
+    .controls{display:flex;gap:12px;align-items:center;margin-top:16px}
+    .controls input[type=text], .controls select{padding:10px 12px;border-radius:10px;border:0;background:var(--glass);color:#fff;outline:none}
+    .controls button{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    .login-btn{background:transparent;border:1px solid rgba(255,255,255,0.12);padding:8px 12px;border-radius:10px}
+
+    /* Main area */
+    .main{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-top:18px}
+
+    /* Task card */
+    .card{background:var(--card);padding:16px;border-radius:12px;color:#021018;min-height:320px}
+    .task-form{display:flex;flex-direction:column;gap:8px}
+    .task-form input, .task-form textarea, .task-form select{padding:10px;border-radius:8px;border:1px solid #e8eef5;font-size:14px}
+    .task-form label{font-size:13px}
+    .task-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:380px;overflow:auto;padding-right:6px}
+
+    /* Single task */
+    .task{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:linear-gradient(180deg,#ffffff, #ffffff);box-shadow:0 2px 8px rgba(3,10,18,0.06)}
+    .task .left{flex:1}
+    .task .title{font-weight:800; font-family:'Montserrat',sans-serif; font-size:15px}
+    .task .meta{font-size:12px;color:#46556a}
+    .task .actions{display:flex;gap:8px;align-items:center}
+    .task button{border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .btn-delete{background:transparent;border:1px solid #ff7675;color:#ff7675;padding:6px;border-radius:8px;font-weight:700;font-size:13px}
+    .btn-done{background:var(--accent-2);color:#fff}
+
+    .small{font-size:12px;padding:6px 8px}
+    .filter-bar{display:flex;gap:8px;align-items:center}
+
+    /* Sidebar */
+    .sidebar{position:relative}
+    .card.side{padding:18px}
+    .stats{display:flex;gap:10px;flex-wrap:wrap}
+    .stat{flex:1;min-width:120px;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:10px;color:#021018}
+
+    /* Login modal */
+    .modal{position:fixed;inset:0;background:rgba(1,2,5,0.6);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .modal .box{background:#fff;padding:18px;border-radius:12px;max-width:420px;width:90%;color:#021018}
+    .modal input{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid #e6eef9}
+
+    /* Appreciation */
+    .appreciation{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:linear-gradient(90deg,#ffd166,#ff7b7b);padding:12px 18px;border-radius:24px;color:#1b1b1b;font-weight:800;display:none;z-index:999}
+
+    footer{margin-top:18px;font-size:12px;opacity:0.8}
+
+    /* Responsive */
+    @media (max-width:860px){.main{grid-template-columns:1fr}.sidebar{order:2}}
+  </style>
+</head>
+<body>
+  <div class="bg-shapes">
+    <div class="shape one"></div>
+    <div class="shape two"></div>
+    <div class="shape three"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="dot">C</div>
+        <div>
+          <h1>Creative To‑Do</h1>
+          <div class="subtitle">Get things done — with reminders & motivation</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="login-btn" id="loginToggle">Login</button>
+        <button class="small" id="notifyPermBtn">Enable Notifications</button>
+      </div>
+    </header>
+
+    <div class="quote" id="quoteBox">
+      <div class="quote-text" id="quoteText">"Small steps every day lead to big change."</div>
+      <div style="margin-left:auto;font-size:12px;opacity:0.9">— Daily Boost</div>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="search" placeholder="Search tasks...">
+      <select id="filterSelect">
+        <option value="all">All</option>
+        <option value="today">Due Today</option>
+        <option value="overdue">Overdue</option>
+        <option value="completed">Completed</option>
+      </select>
+      <button id="clearCompleted" class="small">Clear Completed</button>
+    </div>
+
+    <div class="main">
+      <div class="card">
+        <form id="taskForm" class="task-form" autocomplete="off">
+          <div style="display:flex;gap:8px">
+            <input required id="title" placeholder="Task title" />
+            <select id="priority" style="width:120px">
+              <option value="normal">Normal</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <textarea id="desc" rows="2" placeholder="Short description (optional)"></textarea>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="date" id="dueDate" style="flex:1" />
+            <input type="time" id="dueTime" style="width:140px" />
+            <button type="submit" style="background:var(--accent);color:#fff;border-radius:8px;padding:10px 14px">Add Task</button>
+          </div>
+          <div style="font-size:12px;opacity:0.8;margin-top:6px">Tip: Allow notifications to get timely reminders.</div>
+        </form>
+
+        <div class="task-list" id="taskList" aria-live="polite"></div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="card side">
+          <h3 style="margin-top:0">Today & Stats</h3>
+          <div class="stats" id="statsBox">
+            <div class="stat" id="totalStat">Total<br><strong id="totalCount">0</strong></div>
+            <div class="stat" id="todayStat">Today<br><strong id="todayCount">0</strong></div>
+            <div class="stat" id="overdueStat">Overdue<br><strong id="overdueCount">0</strong></div>
+          </div>
+
+          <hr style="margin:12px 0;border:none;border-top:1px solid rgba(2,6,18,0.06)">
+          <h4 style="margin:6px 0">Upcoming (next 3)</h4>
+          <div id="upcomingList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>Single-file app • Save & open in VS Code • Data stored locally in your browser</footer>
+  </div>
+
+  <!-- Login modal (simple client-side) -->
+  <div class="modal" id="loginModal" style="display:none">
+    <div class="box">
+      <h3 id="loginHeading">Login</h3>
+      <div id="loginMsg" style="font-size:13px;opacity:0.9">No account required — pick a username & password to keep tasks private on this browser.</div>
+      <input id="loginUser" placeholder="Username" />
+      <input id="loginPass" placeholder="Password" type="password" />
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="doLogin">Save</button>
+        <button id="closeLogin" style="background:transparent;border:1px solid #ddd">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="appreciation" id="appreciation">Great job! You completed your daily tasks 🎉</div>
+
+  <script>
+    // ---------- Data model & persistence ----------
+    const STORAGE_KEY = 'creative_todo_v1';
+    let state = {user:null,tasks:[],quoteIndex:0};
+
+    function loadState(){
+      try{const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw);}catch(e){console.error(e)}
+    }
+    function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+    // ---------- Utilities ----------
+    function uid(){return Math.random().toString(36).slice(2,9)}
+    function formatDateTime(d){ const dt = new Date(d); if(isNaN(dt)) return 'No deadline'; return dt.toLocaleString(); }
+    function todayString(){ const d=new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); }
+
+    // ---------- Quotes ----------
+    const QUOTES = [
+      "Small steps every day lead to big change.",
+      "Do it for the person you want to become.",
+      "Consistency beats intensity.",
+      "Focus on progress, not perfection.",
+      "You are closer than you think."
+    ];
+    function rotateQuote(){ state.quoteIndex = (state.quoteIndex+1)%QUOTES.length; document.getElementById('quoteText').textContent = '"'+QUOTES[state.quoteIndex]+'"'; saveState(); }
+
+    // ---------- Notifications ----------
+    let notifyEnabled = false;
+    async function requestNotificationPermission(){
+      if(!('Notification' in window)) return alert('This browser does not support notifications');
+      const perm = await Notification.requestPermission();
+      notifyEnabled = (perm === 'granted');
+      document.getElementById('notifyPermBtn').textContent = notifyEnabled ? 'Notifications: On' : 'Enable Notifications';
+      return notifyEnabled;
+    }
+    function sendNotification(title, body){
+      if(notifyEnabled) new Notification(title, {body}); else showInPageAlert(title+" — "+body);
+    }
+
+    // in-page simple alert fallback
+    function showInPageAlert(text){ alert(text) }
+
+    // schedule reminders for future tasks
+    function scheduleReminders(){
+      // Clear all timers by reloading page? We'll set timers only for tasks with future deadlines
+      const now = Date.now();
+      state.tasks.forEach(task=>{
+        if(task.reminderTimer) { clearTimeout(task.reminderTimer); delete task.reminderTimer; }
+        if(task.done) return;
+        if(task.due){
+          const when = new Date(task.due).getTime();
+          if(when>now){
+            const ms = when - now;
+            // schedule
+            task._timerId = setTimeout(()=>{
+              sendNotification('Task due: '+task.title, task.desc || 'Deadline reached');
+              render();
+            }, ms);
+          }
+        }
+      });
+    }
+
+    // ---------- Task operations ----------
+    function addTask(t){ state.tasks.push(t); saveState(); scheduleReminders(); render(); }
+    function toggleDone(id){ const t = state.tasks.find(x=>x.id===id); if(!t) return; t.done = !t.done; t.completedAt = t.done?new Date().toISOString():null; saveState(); render(); checkDailyCompletion(); }
+    function deleteTask(id){ state.tasks = state.tasks.filter(x=>x.id!==id); saveState(); render(); }
+    function clearCompleted(){ state.tasks = state.tasks.filter(x=>!x.done); saveState(); render(); }
+
+    // ---------- Rendering ----------
+    function taskMatchesFilter(task, filter, search){ const s = search.trim().toLowerCase();
+      if(filter==='today'){
+        if(!task.due) return false; return task.due.slice(0,10) === todayString();
+      }
+      if(filter==='overdue'){
+        if(!task.due) return false; return new Date(task.due) < new Date() && !task.done;
+      }
+      if(filter==='completed') return !!task.done;
+      // default all
+      if(s==='') return true; return (task.title + ' ' + (task.desc||'')).toLowerCase().includes(s);
+    }
+
+    function render(){
+      const list = document.getElementById('taskList'); list.innerHTML = '';
+      const filter = document.getElementById('filterSelect').value;
+      const search = document.getElementById('search').value || '';
+
+      const sorted = [...state.tasks].sort((a,b)=>{
+        // undone, soonest due first
+        if(a.done!==b.done) return a.done?1:-1;
+        const ad = a.due?new Date(a.due).getTime():Infinity;
+        const bd = b.due?new Date(b.due).getTime():Infinity;
+        return ad-bd;
+      });
+
+      let total=0,today=0,overdue=0;
+      const upcoming = [];
+
+      sorted.forEach(task=>{ total++; const dueDate = task.due?new Date(task.due):null; const now=new Date();
+        if(task.due && task.due.slice(0,10)===todayString()) today++;
+        if(task.due && new Date(task.due) < now && !task.done) overdue++;
+        if(task.due && new Date(task.due) > now && upcoming.length<3) upcoming.push(task);
+
+        if(!taskMatchesFilter(task,filter,search)) return;
+
+        const el = document.createElement('div'); el.className='task';
+        const left = document.createElement('div'); left.className='left';
+        const title = document.createElement('div'); title.className='title'; title.textContent=task.title;
+        if(task.priority==='high') title.style.color='#d63031'
+        const meta = document.createElement('div'); meta.className='meta'; meta.innerHTML = (task.desc?task.desc+' — ':'') + (task.due? formatDateTime(task.due):'No deadline');
+        left.appendChild(title); left.appendChild(meta);
+
+        const actions = document.createElement('div'); actions.className='actions';
+        const doneBtn = document.createElement('button'); doneBtn.className='btn-done small'; doneBtn.textContent = task.done? 'Undo' : 'Done'; doneBtn.onclick = ()=> toggleDone(task.id);
+        const delBtn = document.createElement('button'); delBtn.className='btn-delete small'; delBtn.textContent='Delete'; delBtn.onclick = ()=>{ if(confirm('Delete this task?')) deleteTask(task.id); };
+        actions.appendChild(doneBtn); actions.appendChild(delBtn);
+
+        el.appendChild(left); el.appendChild(actions);
+
+        if(task.done){ el.style.opacity=0.6; title.style.textDecoration='line-through'; }
+
+        list.appendChild(el);
+      });
+
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('todayCount').textContent = today;
+      document.getElementById('overdueCount').textContent = overdue;
+
+      const ul = document.getElementById('upcomingList'); ul.innerHTML=''; upcoming.forEach(t=>{
+        const r = document.createElement('div'); r.style.fontSize='13px'; r.textContent = (t.title.length>28? t.title.slice(0,26)+'...':t.title) + ' — ' + (t.due? new Date(t.due).toLocaleString(): 'No deadline'); ul.appendChild(r);
+      });
+    }
+
+    // Check whether all tasks for today are completed: show appreciation
+    function checkDailyCompletion(){
+      const todayTasks = state.tasks.filter(t => t.due && t.due.slice(0,10)===todayString());
+      if(todayTasks.length>0 && todayTasks.every(t=>t.done)){
+        const app = document.getElementById('appreciation'); app.style.display='block'; setTimeout(()=>app.style.display='none',5000);
+        // simple confetti effect: create small emoji bursts
+        burstConfetti();
+      }
+    }
+
+    function burstConfetti(){
+      for(let i=0;i<18;i++){
+        const d = document.createElement('div'); d.textContent = ['🎉','✨','💪','🌟'][Math.floor(Math.random()*4)]; d.style.position='fixed'; d.style.left=(50 + (Math.random()*40-20))+'%'; d.style.bottom='60px'; d.style.fontSize='18px'; d.style.opacity=1; d.style.zIndex=9999; document.body.appendChild(d);
+        const dx = (Math.random()*160-80); const dy = 180+Math.random()*80; d.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${dx}px,-${dy}px) rotate(${Math.random()*540-270}deg)`,opacity:0}],{duration:1600+Math.random()*600,easing:'cubic-bezier(.2,.8,.2,1)'});
+        setTimeout(()=>d.remove(),2300);
+      }
+    }
+
+    // ---------- Init & Events ----------
+    loadState();
+    document.getElementById('quoteText').textContent = '"'+QUOTES[state.quoteIndex % QUOTES.length]+'"';
+
+    // form submit
+    document.getElementById('taskForm').addEventListener('submit', e=>{
+      e.preventDefault(); const title = document.getElementById('title').value.trim(); if(!title) return;
+      const desc = document.getElementById('desc').value.trim(); const dueDate = document.getElementById('dueDate').value; const dueTime = document.getElementById('dueTime').value;
+      let due = null; if(dueDate){ due = dueDate + (dueTime? 'T'+dueTime : 'T00:00'); }
+      const t = {id:uid(),title,desc,created:new Date().toISOString(),due,done:false,priority:document.getElementById('priority').value};
+      addTask(t);
+      document.getElementById('taskForm').reset();
+    });
+
+    // filter & search
+    document.getElementById('filterSelect').addEventListener('change', render);
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('clearCompleted').addEventListener('click', ()=>{ if(confirm('Remove all completed tasks?')){ clearCompleted(); } });
+
+    // login modal
+    document.getElementById('loginToggle').addEventListener('click', ()=>{
+      const modal = document.getElementById('loginModal'); modal.style.display='flex';
+    });
+    document.getElementById('closeLogin').addEventListener('click', ()=>{ document.getElementById('loginModal').style.display='none'; });
+    document.getElementById('doLogin').addEventListener('click', ()=>{
+      const user = document.getElementById('loginUser').value.trim(); const pass = document.getElementById('loginPass').value;
+      if(!user || !pass) return alert('Enter username and password');
+      // Very simple client-side "account" — stored hashed (basic) in localStorage
+      const hash = btoa(user+':'+pass);
+      state.user = {name:user,hash}; saveState(); document.getElementById('loginModal').style.display='none'; document.getElementById('loginToggle').textContent = user; alert('Logged in locally as '+user);
+    });
+
+    // notification permission
+    document.getElementById('notifyPermBtn').addEventListener('click', requestNotificationPermission);
+
+    // rotate quote every 12 seconds
+    setInterval(rotateQuote, 12000);
+
+    // restore timers and render
+    scheduleReminders(); render(); checkDailyCompletion();
+  </script>
+</body>
+</html>
